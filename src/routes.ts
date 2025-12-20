@@ -17,6 +17,7 @@ import {
     extractIndustries,
     extractPortfolioCount,
     waitForPageLoad,
+    sleep,
     leadMeetsRequirements,
     normalizeUrl,
 } from './utils.js';
@@ -225,7 +226,7 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
         // Click load more and wait for new content
         try {
             await hasMoreButton.click();
-            await page.waitForTimeout(2000);
+            await sleep(2000);
             log.debug('Clicked "Load More" button, waiting for new content...');
         } catch (error) {
             log.debug('Could not click load more button', { error: String(error) });

@@ -4,6 +4,12 @@ import { DATA_PATTERNS, PROFILE_SELECTORS } from './selectors.js';
 
 type UnknownRecord = Record<string, unknown>;
 
+export async function sleep(ms: number): Promise<void> {
+    await new Promise<void>((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
 function isRecord(value: unknown): value is UnknownRecord {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -137,9 +143,11 @@ export async function getAllTextContents(page: Page, selector: string): Promise<
         if (!elements.length) return [];
 
         const texts = await Promise.all(
-            elements.map((el) => page.evaluate((e) => e.textContent?.trim() || '', e)),
+            elements.map((element) =>
+                page.evaluate((el) => el.textContent?.trim() || '', element),
+            ),
         );
-        return texts.filter((text) => text.length > 0);
+        return texts.filter((text: string) => text.length > 0);
     } catch {
         return [];
     }
@@ -486,7 +494,7 @@ export async function waitForPageLoad(page: Page, timeout = 10000): Promise<void
             { timeout },
         );
         // Additional wait for dynamic content
-        await page.waitForTimeout(1000);
+        await sleep(1000);
     } catch {
         // Continue even if timeout
     }

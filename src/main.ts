@@ -14,6 +14,7 @@ import log from '@apify/log';
 import { router, initializeState } from './routes.js';
 import type { ScraperInput, CategoryUserData } from './types.js';
 import { RouteLabel } from './types.js';
+import { toProxyConfigurationOptions } from './proxy.js';
 
 // Initialize the Actor
 await Actor.init();
@@ -55,7 +56,7 @@ log.info('Input configuration:', {
     startPage,
     maxPages: maxPages === 0 ? 'unlimited' : maxPages,
     requiredFields: requiredFields.length > 0 ? requiredFields : 'none',
-    useProxy: proxyConfig?.useApifyProxy ?? false,
+    useProxy: Boolean(proxyConfig),
 });
 
 // Initialize the crawler state
@@ -67,8 +68,9 @@ await initializeState({
 });
 
 // Create proxy configuration
-const proxyConfiguration = proxyConfig
-    ? await Actor.createProxyConfiguration(proxyConfig)
+const proxyConfigurationOptions = toProxyConfigurationOptions(proxyConfig);
+const proxyConfiguration = proxyConfigurationOptions
+    ? await Actor.createProxyConfiguration(proxyConfigurationOptions)
     : undefined;
 
 // Create the Puppeteer crawler

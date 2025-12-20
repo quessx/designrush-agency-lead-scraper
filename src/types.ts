@@ -1,4 +1,10 @@
-import type { ProxyConfigurationOptions } from 'apify';
+/**
+ * Proxy configuration as provided by Apify input schema (\"proxy\" editor).
+ *
+ * Apify UI may include fields that are not part of the SDK types, so we allow
+ * arbitrary keys while keeping values unknown (no `any`).
+ */
+export type ProxyConfigurationInput = Record<string, unknown>;
 
 /**
  * Required fields that can be used to filter leads
@@ -32,7 +38,7 @@ export interface ScraperInput {
     /** Only push leads that have ALL selected fields filled */
     requiredFields?: RequiredField[];
     /** Proxy configuration for the crawler */
-    proxyConfiguration?: ProxyConfigurationOptions;
+    proxyConfiguration?: ProxyConfigurationInput;
 }
 
 /**
