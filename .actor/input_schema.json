@@ -1,0 +1,80 @@
+{
+    "title": "DesignRush Agency Lead Scraper Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "Category URL(s) to start scraping from. In MVP, use exactly one category URL (e.g., https://www.designrush.com/agency/web-development-companies)",
+            "editor": "requestListSources",
+            "prefill": [
+                {
+                    "url": "https://www.designrush.com/agency/web-development-companies"
+                }
+            ],
+            "default": [
+                {
+                    "url": "https://www.designrush.com/agency/web-development-companies"
+                }
+            ]
+        },
+        "maxItems": {
+            "title": "Max Items",
+            "type": "integer",
+            "description": "Maximum number of company profiles to process. Set to 0 for unlimited.",
+            "default": 50,
+            "minimum": 0
+        },
+        "startPage": {
+            "title": "Start Page",
+            "type": "integer",
+            "description": "Page number to start scraping from (1-based). Use this to skip already scraped pages or resume from a specific page.",
+            "default": 1,
+            "minimum": 1
+        },
+        "maxPages": {
+            "title": "Max Pages",
+            "type": "integer",
+            "description": "Maximum number of pages to process (0 = unlimited). The scraper will stop after processing this many pages.",
+            "default": 0,
+            "minimum": 0
+        },
+        "requiredFields": {
+            "title": "Required Fields",
+            "type": "array",
+            "description": "Only push leads that have ALL selected fields filled. Leave empty to push all leads.",
+            "editor": "select",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "email",
+                    "website",
+                    "linkedin",
+                    "facebook",
+                    "twitter",
+                    "instagram"
+                ],
+                "enumTitles": [
+                    "Email",
+                    "Website",
+                    "LinkedIn",
+                    "Facebook",
+                    "Twitter",
+                    "Instagram"
+                ]
+            },
+            "default": []
+        },
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "type": "object",
+            "description": "Proxy configuration for anti-bot protection. Recommended to use Apify Proxy for best results.",
+            "editor": "proxy",
+            "default": {
+                "useApifyProxy": true
+            }
+        }
+    },
+    "required": ["startUrls"]
+}

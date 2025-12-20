@@ -1,0 +1,18 @@
+{
+    "actorSpecification": 1,
+    "name": "designrush-agency-lead-scraper",
+    "title": "DesignRush Agency Lead Scraper",
+    "description": "Scrapes company/agency leads from DesignRush platform. Collects contact information, company details, social media links, and more from agency profiles.",
+    "version": "1.0.0",
+    "meta": {
+        "templateId": "ts-crawlee-puppeteer-chrome",
+		"generatedBy": "gpt-5.2"
+    },
+    "input": "./input_schema.json",
+    "output": "./output_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "dockerfile": "../Dockerfile",
+    "usesStandbyMode": false
+}

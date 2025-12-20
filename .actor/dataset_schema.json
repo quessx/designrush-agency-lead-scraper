@@ -1,0 +1,272 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "Company name"
+            },
+            "profileUrl": {
+                "type": "string",
+                "description": "DesignRush profile URL"
+            },
+            "website": {
+                "type": ["string", "null"],
+                "description": "Company website"
+            },
+            "email": {
+                "type": ["string", "null"],
+                "description": "Contact email"
+            },
+            "logoUrl": {
+                "type": ["string", "null"],
+                "description": "Company logo URL"
+            },
+            "location": {
+                "type": ["string", "null"],
+                "description": "Company location"
+            },
+            "hourlyRate": {
+                "type": ["string", "null"],
+                "description": "Hourly rate range"
+            },
+            "minProjectSize": {
+                "type": ["string", "null"],
+                "description": "Minimum project size"
+            },
+            "employees": {
+                "type": ["string", "null"],
+                "description": "Number of employees"
+            },
+            "yearFounded": {
+                "type": ["string", "null"],
+                "description": "Year founded"
+            },
+            "rating": {
+                "type": ["number", "null"],
+                "description": "Average rating"
+            },
+            "reviewsCount": {
+                "type": ["integer", "null"],
+                "description": "Number of reviews"
+            },
+            "services": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "List of services offered"
+            },
+            "industries": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "List of industries served"
+            },
+            "socialLinks": {
+                "type": "object",
+                "properties": {
+                    "linkedin": { "type": ["string", "null"] },
+                    "facebook": { "type": ["string", "null"] },
+                    "twitter": { "type": ["string", "null"] },
+                    "instagram": { "type": ["string", "null"] }
+                },
+                "description": "Social media links"
+            },
+            "portfolioCount": {
+                "type": ["integer", "null"],
+                "description": "Number of portfolio items"
+            },
+            "scrapedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the data was scraped"
+            }
+        },
+        "required": ["name", "profileUrl", "scrapedAt"]
+    },
+    "views": {
+        "overview": {
+            "title": "Agency Leads Overview",
+            "description": "Overview of scraped agency leads with key contact information",
+            "transformation": {
+                "fields": [
+                    "name",
+                    "website",
+                    "email",
+                    "location",
+                    "rating",
+                    "hourlyRate",
+                    "employees",
+                    "profileUrl"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "name": {
+                        "label": "Company Name",
+                        "format": "text"
+                    },
+                    "website": {
+                        "label": "Website",
+                        "format": "link"
+                    },
+                    "email": {
+                        "label": "Email",
+                        "format": "text"
+                    },
+                    "location": {
+                        "label": "Location",
+                        "format": "text"
+                    },
+                    "rating": {
+                        "label": "Rating",
+                        "format": "number"
+                    },
+                    "hourlyRate": {
+                        "label": "Hourly Rate",
+                        "format": "text"
+                    },
+                    "employees": {
+                        "label": "Employees",
+                        "format": "text"
+                    },
+                    "profileUrl": {
+                        "label": "Profile URL",
+                        "format": "link"
+                    }
+                }
+            }
+        },
+        "contacts": {
+            "title": "Contact Information",
+            "description": "Contact details and social media links",
+            "transformation": {
+                "fields": [
+                    "name",
+                    "email",
+                    "website",
+                    "socialLinks"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "name": {
+                        "label": "Company Name",
+                        "format": "text"
+                    },
+                    "email": {
+                        "label": "Email",
+                        "format": "text"
+                    },
+                    "website": {
+                        "label": "Website",
+                        "format": "link"
+                    },
+                    "socialLinks": {
+                        "label": "Social Links",
+                        "format": "object"
+                    }
+                }
+            }
+        },
+        "full": {
+            "title": "Full Data",
+            "description": "Complete agency lead data",
+            "transformation": {
+                "fields": [
+                    "name",
+                    "profileUrl",
+                    "website",
+                    "email",
+                    "logoUrl",
+                    "location",
+                    "hourlyRate",
+                    "minProjectSize",
+                    "employees",
+                    "yearFounded",
+                    "rating",
+                    "reviewsCount",
+                    "services",
+                    "industries",
+                    "socialLinks",
+                    "portfolioCount",
+                    "scrapedAt"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "name": {
+                        "label": "Company Name",
+                        "format": "text"
+                    },
+                    "profileUrl": {
+                        "label": "Profile URL",
+                        "format": "link"
+                    },
+                    "website": {
+                        "label": "Website",
+                        "format": "link"
+                    },
+                    "email": {
+                        "label": "Email",
+                        "format": "text"
+                    },
+                    "logoUrl": {
+                        "label": "Logo",
+                        "format": "image"
+                    },
+                    "location": {
+                        "label": "Location",
+                        "format": "text"
+                    },
+                    "hourlyRate": {
+                        "label": "Hourly Rate",
+                        "format": "text"
+                    },
+                    "minProjectSize": {
+                        "label": "Min Project Size",
+                        "format": "text"
+                    },
+                    "employees": {
+                        "label": "Employees",
+                        "format": "text"
+                    },
+                    "yearFounded": {
+                        "label": "Year Founded",
+                        "format": "text"
+                    },
+                    "rating": {
+                        "label": "Rating",
+                        "format": "number"
+                    },
+                    "reviewsCount": {
+                        "label": "Reviews",
+                        "format": "number"
+                    },
+                    "services": {
+                        "label": "Services",
+                        "format": "array"
+                    },
+                    "industries": {
+                        "label": "Industries",
+                        "format": "array"
+                    },
+                    "socialLinks": {
+                        "label": "Social Links",
+                        "format": "object"
+                    },
+                    "portfolioCount": {
+                        "label": "Portfolio Items",
+                        "format": "number"
+                    },
+                    "scrapedAt": {
+                        "label": "Scraped At",
+                        "format": "date"
+                    }
+                }
+            }
+        }
+    }
+}

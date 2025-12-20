@@ -1,0 +1,26 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "DesignRush Agency Lead Scraper Output",
+    "properties": {
+        "overview": {
+            "type": "string",
+            "title": "Agency Leads Overview",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+        },
+        "contacts": {
+            "type": "string",
+            "title": "Contact Information",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=contacts"
+        },
+        "fullData": {
+            "type": "string",
+            "title": "Full Data",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=full"
+        },
+        "rawDataset": {
+            "type": "string",
+            "title": "Raw Dataset",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}
