@@ -1,4 +1,4 @@
-# DesignRush Agency Lead Scraper (Apify Actor)
+# DesignRush Agency Lead Scraper
 
 This Actor collects **agency/company leads** from DesignRush category pages (e.g. web development companies). It visits each company profile and extracts structured data (website, email, rating, services, industries, social links, etc.).
 
