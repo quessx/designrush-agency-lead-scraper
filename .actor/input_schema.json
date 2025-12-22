@@ -23,7 +23,7 @@
             "title": "Max Items",
             "type": "integer",
             "description": "Maximum number of company profiles to process. Set to 0 for unlimited.",
-            "default": 50,
+            "default": 5,
             "minimum": 0
         },
         "startPage": {

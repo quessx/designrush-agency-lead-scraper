@@ -8,6 +8,7 @@
  * @see https://www.designrush.com/agency/web-development-companies
  */
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
+import { Configuration } from '@crawlee/core';
 import { Actor } from 'apify';
 import log from '@apify/log';
 
@@ -18,6 +19,10 @@ import { toProxyConfigurationOptions } from './proxy.js';
 
 // Initialize the Actor
 await Actor.init();
+
+// Reduce noisy Crawlee internal INFO logs (AutoscaledPool/Statistics) on Apify runs.
+// This also affects @apify/log global level.
+Configuration.getGlobalConfig().set('logLevel', 'WARNING');
 
 log.info('DesignRush Agency Lead Scraper started');
 
@@ -103,9 +108,16 @@ const crawler = new PuppeteerCrawler({
 
     // Pre-navigation hooks for setting up the page
     preNavigationHooks: [
-        async ({ page }) => {
+        async ({ page }, gotoOptions) => {
+            // Faster navigation: don't wait for all network activity.
+            if (gotoOptions) gotoOptions.waitUntil = 'domcontentloaded';
+
             // Set a realistic viewport
             await page.setViewport({ width: 1920, height: 1080 });
+
+            // For this site we can extract required data from HTML + JSON-LD.
+            // Disabling JS drastically reduces CPU usage on Apify containers.
+            await page.setJavaScriptEnabled(false);
 
             // Set user agent to a recent Chrome version
             await page.setUserAgent(
@@ -116,7 +128,7 @@ const crawler = new PuppeteerCrawler({
             await page.setRequestInterception(true);
             page.on('request', (req) => {
                 const resourceType = req.resourceType();
-                const blockedTypes = ['image', 'stylesheet', 'font', 'media'];
+                const blockedTypes = ['image', 'stylesheet', 'font', 'media', 'script'];
 
                 if (blockedTypes.includes(resourceType)) {
                     req.abort();

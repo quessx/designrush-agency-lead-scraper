@@ -17,7 +17,6 @@ import {
     extractIndustries,
     extractPortfolioCount,
     waitForPageLoad,
-    sleep,
     leadMeetsRequirements,
     normalizeUrl,
 } from './utils.js';
@@ -181,9 +180,6 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
 
     await waitForPageLoad(page);
 
-    // Scroll to load more content if the page uses infinite scroll
-    await autoScroll(page);
-
     // Find all profile links on the page
     const profileLinks = await page.$$eval(
         CATEGORY_SELECTORS.PROFILE_LINK,
@@ -219,19 +215,6 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
 
     // Mark this page as processed
     await incrementPagesProcessed(currentPageNumber);
-
-    // Check for pagination or "Load More" button
-    const hasMoreButton = await page.$(CATEGORY_SELECTORS.HAS_MORE_RESULTS);
-    if (hasMoreButton && !await hasReachedMaxItems() && !await hasReachedMaxPages()) {
-        // Click load more and wait for new content
-        try {
-            await hasMoreButton.click();
-            await sleep(2000);
-            log.debug('Clicked "Load More" button, waiting for new content...');
-        } catch (error) {
-            log.debug('Could not click load more button', { error: String(error) });
-        }
-    }
 
     // Enqueue next page if limits not reached
     await enqueueNextPage(url, currentPageNumber, await getState(), enqueueLinks);
@@ -269,8 +252,7 @@ async function enqueueNextPage(
     }
 
     // Build the next page URL
-    const baseUrl = currentUrl.split('?')[0]; // Remove existing query params
-    const nextPageUrl = buildPaginatedUrl(baseUrl, nextPageNumber);
+    const nextPageUrl = buildPaginatedUrl(currentUrl, nextPageNumber);
 
     await enqueueLinks({
         urls: [nextPageUrl],
@@ -304,8 +286,6 @@ router.addHandler(RouteLabel.PROFILE, async ({ request, page }) => {
     log.info(`Processing profile: ${url}`);
 
     await waitForPageLoad(page);
-    // Some sections (services/industries) may render below the fold; scroll a bit to trigger lazy render
-    await autoScroll(page);
     // Try to wait briefly for industries section to appear (do not fail hard)
     try {
         await page.waitForSelector('.profile-block.industries', { timeout: 5000 });
@@ -406,34 +386,6 @@ router.addDefaultHandler(async ({ request, page, enqueueLinks }) => {
         log.warning(`Unknown page type: ${url}`);
     }
 });
-
-/**
- * Auto-scroll the page to trigger lazy loading
- */
-async function autoScroll(page: Parameters<Parameters<typeof router.addHandler>[1]>[0]['page']): Promise<void> {
-    await page.evaluate(async () => {
-        await new Promise<void>((resolve) => {
-            let totalHeight = 0;
-            const distance = 300;
-            const maxScrolls = 20;
-            let scrollCount = 0;
-
-            const timer = setInterval(() => {
-                const scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-                scrollCount++;
-
-                if (totalHeight >= scrollHeight || scrollCount >= maxScrolls) {
-                    clearInterval(timer);
-                    // Scroll back to top
-                    window.scrollTo(0, 0);
-                    resolve();
-                }
-            }, 200);
-        });
-    });
-}
 
 /**
  * Parameters for state initialization
