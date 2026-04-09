@@ -7,15 +7,15 @@
  *
  * @see https://www.designrush.com/agency/web-development-companies
  */
-import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { Configuration } from '@crawlee/core';
+import { Configuration, PuppeteerCrawler } from '@crawlee/puppeteer';
 import { Actor } from 'apify';
+
 import log from '@apify/log';
 
-import { router, initializeState } from './routes.js';
-import type { ScraperInput, CategoryUserData } from './types.js';
-import { RouteLabel } from './types.js';
 import { toProxyConfigurationOptions } from './proxy.js';
+import { createStartRequests } from './request-metadata.js';
+import { initializeState, router } from './routes.js';
+import type { ScraperInput } from './types.js';
 
 // Initialize the Actor
 await Actor.init();
@@ -86,12 +86,7 @@ const crawler = new PuppeteerCrawler({
     // Puppeteer launch options
     launchContext: {
         launchOptions: {
-            args: [
-                '--disable-gpu',
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-            ],
+            args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         },
     },
 
@@ -109,8 +104,12 @@ const crawler = new PuppeteerCrawler({
     // Pre-navigation hooks for setting up the page
     preNavigationHooks: [
         async ({ page }, gotoOptions) => {
+            const navigationOptions = gotoOptions;
+
             // Faster navigation: don't wait for all network activity.
-            if (gotoOptions) gotoOptions.waitUntil = 'domcontentloaded';
+            if (navigationOptions) {
+                navigationOptions.waitUntil = 'domcontentloaded';
+            }
 
             // Set a realistic viewport
             await page.setViewport({ width: 1920, height: 1080 });
@@ -131,9 +130,9 @@ const crawler = new PuppeteerCrawler({
                 const blockedTypes = ['image', 'stylesheet', 'font', 'media', 'script'];
 
                 if (blockedTypes.includes(resourceType)) {
-                    req.abort();
+                    void req.abort();
                 } else {
-                    req.continue();
+                    void req.continue();
                 }
             });
         },
@@ -145,34 +144,8 @@ const crawler = new PuppeteerCrawler({
     },
 });
 
-/**
- * Build URL with page parameter if startPage > 1
- */
-function buildStartUrl(baseUrl: string, pageNum: number): string {
-    if (pageNum <= 1) return baseUrl;
-
-    const url = new URL(baseUrl);
-    url.searchParams.set('page', String(pageNum));
-    return url.toString();
-}
-
-// Prepare start requests with proper labels and pagination
-const requests = startUrls.map((startUrl) => {
-    const isProfile = startUrl.url.includes('/agency/profile/');
-
-    // For category pages, apply startPage parameter
-    const url = isProfile ? startUrl.url : buildStartUrl(startUrl.url, startPage);
-
-    return {
-        url,
-        userData: isProfile
-            ? { label: RouteLabel.PROFILE }
-            : {
-                label: RouteLabel.CATEGORY,
-                pageNumber: startPage,
-            } as CategoryUserData,
-    };
-});
+// Prepare start requests with proper labels, pagination, and source URL metadata.
+const requests = createStartRequests(startUrls, startPage);
 
 log.info(`Starting crawl with ${requests.length} URL(s)`);
 

@@ -13,7 +13,8 @@ export const CATEGORY_SELECTORS = {
      * Selector for agency cards/items in the listing
      * The listing page contains cards with agency information
      */
-    AGENCY_CARD: '[data-testid="provider-card"], .provider-card, .agency-card, [class*="ProviderCard"], [class*="AgencyCard"]',
+    AGENCY_CARD:
+        '[data-testid="provider-card"], .provider-card, .agency-card, [class*="ProviderCard"], [class*="AgencyCard"]',
 
     /**
      * Selector for the link to agency profile within a card
@@ -63,7 +64,8 @@ export const PROFILE_SELECTORS = {
     /**
      * Company website link
      */
-    WEBSITE: 'a[href^="http"]:not([href*="designrush"]):not([href*="linkedin"]):not([href*="facebook"]):not([href*="twitter"]):not([href*="instagram"])[class*="website"], a[data-testid="website"], a[rel="nofollow"][target="_blank"]',
+    WEBSITE:
+        'a[href^="http"]:not([href*="designrush"]):not([href*="linkedin"]):not([href*="facebook"]):not([href*="twitter"]):not([href*="instagram"])[class*="website"], a[data-testid="website"], a[rel="nofollow"][target="_blank"]',
 
     /**
      * Contact email
@@ -88,7 +90,8 @@ export const PROFILE_SELECTORS = {
     /**
      * Minimum project size
      */
-    MIN_PROJECT_SIZE: '[class*="project-size"], [class*="ProjectSize"], [data-testid="min-project"], :contains("Min. project")',
+    MIN_PROJECT_SIZE:
+        '[class*="project-size"], [class*="ProjectSize"], [data-testid="min-project"], :contains("Min. project")',
 
     /**
      * Number of employees
@@ -161,12 +164,14 @@ export const PROFILE_SELECTORS = {
     /**
      * Portfolio section
      */
-    PORTFOLIO_ITEMS: '[class*="portfolio"] [class*="item"], [class*="Portfolio"] [class*="Item"], [class*="project-card"], [class*="ProjectCard"]',
+    PORTFOLIO_ITEMS:
+        '[class*="portfolio"] [class*="item"], [class*="Portfolio"] [class*="Item"], [class*="project-card"], [class*="ProjectCard"]',
 
     /**
      * Key stats container (often contains hourly rate, employees, etc.)
      */
-    STATS_CONTAINER: '[class*="stats"], [class*="Stats"], [class*="key-facts"], [class*="KeyFacts"], [class*="company-info"], [class*="CompanyInfo"]',
+    STATS_CONTAINER:
+        '[class*="stats"], [class*="Stats"], [class*="key-facts"], [class*="KeyFacts"], [class*="company-info"], [class*="CompanyInfo"]',
 } as const;
 
 /**
@@ -223,7 +228,6 @@ export const BASE_URL = 'https://www.designrush.com';
  * URL patterns for route matching
  */
 export const URL_PATTERNS = {
-    CATEGORY: /\/agency\/[^\/]+(?:\/[a-z]{2})?$/,
-    PROFILE: /\/agency\/profile\/[^\/]+$/,
+    CATEGORY: /\/agency\/[^/]+(?:\/[a-z]{2})?$/,
+    PROFILE: /\/agency\/profile\/[^/]+$/,
 } as const;
-

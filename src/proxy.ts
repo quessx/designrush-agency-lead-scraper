@@ -16,9 +16,7 @@ function getString(value: unknown): string | undefined {
 
 function getStringArray(value: unknown): string[] | undefined {
     if (!Array.isArray(value)) return undefined;
-    const items = value
-        .map(getString)
-        .filter((v): v is string => typeof v === 'string');
+    const items = value.map(getString).filter((v): v is string => typeof v === 'string');
     return items.length > 0 ? items : undefined;
 }
 
@@ -66,7 +64,7 @@ export function toProxyConfigurationOptions(input: unknown): ProxyConfigurationO
     const checkAccess = getBoolean(input.checkAccess);
     if (typeof checkAccess === 'boolean') options.checkAccess = checkAccess;
 
-    const newUrlFunction = input.newUrlFunction;
+    const { newUrlFunction } = input;
     if (typeof newUrlFunction === 'function') {
         // If provided from code (not from JSON), allow it.
         options.newUrlFunction = newUrlFunction as ProxyConfigurationOptions['newUrlFunction'];
@@ -79,5 +77,3 @@ export function toProxyConfigurationOptions(input: unknown): ProxyConfigurationO
     // Empty options object is valid and means "use Apify Proxy smart defaults" on the platform.
     return options;
 }
-
-

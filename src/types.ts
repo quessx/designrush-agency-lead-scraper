@@ -10,25 +10,29 @@ export type ProxyConfigurationInput = Record<string, unknown>;
  * Required fields that can be used to filter leads
  * Only leads with ALL selected fields filled will be pushed to the dataset
  */
-export type RequiredField =
-    | 'email'
-    | 'website'
-    | 'linkedin'
-    | 'facebook'
-    | 'twitter'
-    | 'instagram';
+export type RequiredField = 'email' | 'website' | 'linkedin' | 'facebook' | 'twitter' | 'instagram';
+
+export interface ScraperStartUrl {
+    url: string;
+    method?: 'GET' | 'POST';
+    headers?: Record<string, string>;
+    userData?: Record<string, unknown>;
+}
+
+/**
+ * Original start URL from Actor input.
+ * Preserved through pagination/profile requests and saved to output items.
+ */
+export interface StartUrlReference {
+    sourceStartUrl: string;
+}
 
 /**
  * Input parameters for the DesignRush Agency Lead Scraper
  */
 export interface ScraperInput {
     /** Category URL(s) to start scraping from */
-    startUrls: Array<{
-        url: string;
-        method?: 'GET' | 'POST';
-        headers?: Record<string, string>;
-        userData?: Record<string, unknown>;
-    }>;
+    startUrls: ScraperStartUrl[];
     /** Maximum number of company profiles to process (0 = unlimited) */
     maxItems?: number;
     /** Page number to start scraping from (1-based) */
@@ -54,9 +58,11 @@ export interface SocialLinks {
 /**
  * Agency lead data structure
  */
-export interface AgencyLead {
+export interface AgencyLead extends StartUrlReference {
     /** Company name */
     name: string;
+    /** Original start URL from the input that produced this lead */
+    sourceStartUrl: string;
     /** DesignRush profile URL */
     profileUrl: string;
     /** Company website */
@@ -102,16 +108,15 @@ export enum RouteLabel {
 /**
  * User data passed between routes
  */
-export interface CategoryUserData {
+export interface CategoryUserData extends StartUrlReference {
     label: RouteLabel.CATEGORY;
     /** Page number for this category request (1-based) */
     pageNumber: number;
 }
 
-export interface ProfileUserData {
+export interface ProfileUserData extends StartUrlReference {
     label: RouteLabel.PROFILE;
     agencyName?: string;
 }
 
 export type RouteUserData = CategoryUserData | ProfileUserData;
-

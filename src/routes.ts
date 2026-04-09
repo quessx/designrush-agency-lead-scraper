@@ -1,24 +1,32 @@
 import { createPuppeteerRouter, Dataset } from '@crawlee/puppeteer';
 import { Actor } from 'apify';
+
 import log from '@apify/log';
 
+import { createAgencyLead } from './agency-lead.js';
+import {
+    buildPaginatedUrl,
+    createCategoryUserData,
+    createProfileUserData,
+    resolveSourceStartUrl,
+} from './request-metadata.js';
+import { CATEGORY_SELECTORS, PROFILE_SELECTORS } from './selectors.js';
 import type { AgencyLead, CategoryUserData, ProfileUserData, RequiredField } from './types.js';
 import { RouteLabel } from './types.js';
-import { CATEGORY_SELECTORS, PROFILE_SELECTORS } from './selectors.js';
 import {
-    getTextContent,
-    getImgSrc,
-    extractEmail,
-    extractWebsite,
-    extractSocialLinks,
-    extractRating,
     extractCompanyStats,
-    extractServices,
+    extractEmail,
     extractIndustries,
     extractPortfolioCount,
-    waitForPageLoad,
+    extractRating,
+    extractServices,
+    extractSocialLinks,
+    extractWebsite,
+    getImgSrc,
+    getTextContent,
     leadMeetsRequirements,
     normalizeUrl,
+    waitForPageLoad,
 } from './utils.js';
 
 /**
@@ -46,15 +54,17 @@ interface CrawlerState {
  */
 async function getState(): Promise<CrawlerState> {
     const state = await Actor.getValue<CrawlerState>('STATE');
-    return state || {
-        processedCount: 0,
-        maxItems: 0,
-        requiredFields: [],
-        startPage: 1,
-        currentPage: 1,
-        maxPages: 0,
-        pagesProcessed: 0,
-    };
+    return (
+        state || {
+            processedCount: 0,
+            maxItems: 0,
+            requiredFields: [],
+            startPage: 1,
+            currentPage: 1,
+            maxPages: 0,
+            pagesProcessed: 0,
+        }
+    );
 }
 
 /**
@@ -105,7 +115,7 @@ async function incrementPagesProcessed(pageNumber: number): Promise<number> {
         pagesProcessed: newCount,
         currentPage: pageNumber,
     });
-    log.info(`Page ${pageNumber} processed (${newCount}/${state.maxPages === 0 ? '∞' : state.maxPages} pages)`);
+    log.info(`Page ${pageNumber} processed (${newCount}/${state.maxPages === 0 ? 'unlimited' : state.maxPages} pages)`);
     return newCount;
 }
 
@@ -114,19 +124,6 @@ async function incrementPagesProcessed(pageNumber: number): Promise<number> {
  */
 function shouldProcessPage(pageNumber: number, startPage: number): boolean {
     return pageNumber >= startPage;
-}
-
-/**
- * Build paginated URL for a category
- */
-function buildPaginatedUrl(baseUrl: string, pageNumber: number): string {
-    const url = new URL(baseUrl);
-    if (pageNumber > 1) {
-        url.searchParams.set('page', String(pageNumber));
-    } else {
-        url.searchParams.delete('page');
-    }
-    return url.toString();
 }
 
 /**
@@ -150,8 +147,9 @@ export const router = createPuppeteerRouter();
  */
 router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) => {
     const url = request.loadedUrl || request.url;
-    const userData = request.userData as CategoryUserData;
-    const currentPageNumber = userData?.pageNumber ?? getPageNumberFromUrl(url);
+    const userData = request.userData as Partial<CategoryUserData>;
+    const sourceStartUrl = resolveSourceStartUrl(userData.sourceStartUrl, url);
+    const currentPageNumber = userData.pageNumber ?? getPageNumberFromUrl(url);
 
     log.info(`Processing category page ${currentPageNumber}: ${url}`);
 
@@ -162,7 +160,7 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
     if (!shouldProcessPage(currentPageNumber, state.startPage)) {
         log.info(`Skipping page ${currentPageNumber} (startPage=${state.startPage})`);
         // Still enqueue next page if needed
-        await enqueueNextPage(url, currentPageNumber, state, enqueueLinks);
+        await enqueueNextPage(sourceStartUrl, currentPageNumber, state, enqueueLinks);
         return;
     }
 
@@ -181,11 +179,8 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
     await waitForPageLoad(page);
 
     // Find all profile links on the page
-    const profileLinks = await page.$$eval(
-        CATEGORY_SELECTORS.PROFILE_LINK,
-        (links) => links
-            .map((link) => (link as HTMLAnchorElement).href)
-            .filter((href) => href.includes('/agency/profile/')),
+    const profileLinks = await page.$$eval(CATEGORY_SELECTORS.PROFILE_LINK, (links) =>
+        links.map((link) => (link as HTMLAnchorElement).href).filter((href) => href.includes('/agency/profile/')),
     );
 
     const uniqueLinks = [...new Set(profileLinks)];
@@ -193,9 +188,10 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
 
     // Get updated state to check max items
     const currentState = await getState();
-    const remainingSlots = currentState.maxItems === 0
-        ? uniqueLinks.length
-        : Math.max(0, currentState.maxItems - currentState.processedCount);
+    const remainingSlots =
+        currentState.maxItems === 0
+            ? uniqueLinks.length
+            : Math.max(0, currentState.maxItems - currentState.processedCount);
 
     const linksToEnqueue = uniqueLinks.slice(0, remainingSlots);
 
@@ -204,9 +200,7 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
             urls: linksToEnqueue,
             label: RouteLabel.PROFILE,
             transformRequestFunction: (req) => {
-                req.userData = {
-                    label: RouteLabel.PROFILE,
-                } as ProfileUserData;
+                req.userData = createProfileUserData(sourceStartUrl);
                 return req;
             },
         });
@@ -217,14 +211,14 @@ router.addHandler(RouteLabel.CATEGORY, async ({ request, page, enqueueLinks }) =
     await incrementPagesProcessed(currentPageNumber);
 
     // Enqueue next page if limits not reached
-    await enqueueNextPage(url, currentPageNumber, await getState(), enqueueLinks);
+    await enqueueNextPage(sourceStartUrl, currentPageNumber, await getState(), enqueueLinks);
 });
 
 /**
  * Helper to enqueue the next page in pagination
  */
 async function enqueueNextPage(
-    currentUrl: string,
+    sourceStartUrl: string,
     currentPageNumber: number,
     state: CrawlerState,
     enqueueLinks: Parameters<Parameters<typeof router.addHandler>[1]>[0]['enqueueLinks'],
@@ -252,16 +246,13 @@ async function enqueueNextPage(
     }
 
     // Build the next page URL
-    const nextPageUrl = buildPaginatedUrl(currentUrl, nextPageNumber);
+    const nextPageUrl = buildPaginatedUrl(sourceStartUrl, nextPageNumber);
 
     await enqueueLinks({
         urls: [nextPageUrl],
         label: RouteLabel.CATEGORY,
         transformRequestFunction: (req) => {
-            req.userData = {
-                label: RouteLabel.CATEGORY,
-                pageNumber: nextPageNumber,
-            } as CategoryUserData;
+            req.userData = createCategoryUserData(nextPageNumber, sourceStartUrl);
             return req;
         },
     });
@@ -275,6 +266,8 @@ async function enqueueNextPage(
  */
 router.addHandler(RouteLabel.PROFILE, async ({ request, page }) => {
     const url = request.loadedUrl || request.url;
+    const userData = request.userData as Partial<ProfileUserData>;
+    const sourceStartUrl = resolveSourceStartUrl(userData.sourceStartUrl, normalizeUrl(url));
 
     // Check if we've reached the max items
     if (await hasReachedMaxItems()) {
@@ -326,9 +319,10 @@ router.addHandler(RouteLabel.PROFILE, async ({ request, page }) => {
     ]);
 
     // Build the lead object
-    const lead: AgencyLead = {
+    const lead: AgencyLead = createAgencyLead({
         name,
-        profileUrl: normalizeUrl(url),
+        sourceStartUrl,
+        profileUrl: url,
         website,
         email,
         logoUrl,
@@ -343,8 +337,7 @@ router.addHandler(RouteLabel.PROFILE, async ({ request, page }) => {
         industries,
         socialLinks,
         portfolioCount,
-        scrapedAt: new Date().toISOString(),
-    };
+    });
 
     // Check if lead meets required fields
     const state = await getState();
@@ -357,7 +350,7 @@ router.addHandler(RouteLabel.PROFILE, async ({ request, page }) => {
     await Dataset.pushData(lead);
     const count = await incrementProcessedCount();
 
-    log.info(`Saved lead: ${name} (${count}/${state.maxItems === 0 ? '∞' : state.maxItems})`);
+    log.info(`Saved lead: ${name} (${count}/${state.maxItems === 0 ? 'unlimited' : state.maxItems})`);
 });
 
 /**

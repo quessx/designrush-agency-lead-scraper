@@ -7,6 +7,10 @@
                 "type": "string",
                 "description": "Company name"
             },
+            "sourceStartUrl": {
+                "type": "string",
+                "description": "Original start URL from the Actor input that produced this lead"
+            },
             "profileUrl": {
                 "type": "string",
                 "description": "DesignRush profile URL"
@@ -81,7 +85,7 @@
                 "description": "Timestamp when the data was scraped"
             }
         },
-        "required": ["name", "profileUrl", "scrapedAt"]
+        "required": ["name", "sourceStartUrl", "profileUrl", "scrapedAt"]
     },
     "views": {
         "overview": {
@@ -90,6 +94,7 @@
             "transformation": {
                 "fields": [
                     "name",
+                    "sourceStartUrl",
                     "website",
                     "email",
                     "location",
@@ -105,6 +110,10 @@
                     "name": {
                         "label": "Company Name",
                         "format": "text"
+                    },
+                    "sourceStartUrl": {
+                        "label": "Start URL",
+                        "format": "link"
                     },
                     "website": {
                         "label": "Website",
@@ -141,12 +150,7 @@
             "title": "Contact Information",
             "description": "Contact details and social media links",
             "transformation": {
-                "fields": [
-                    "name",
-                    "email",
-                    "website",
-                    "socialLinks"
-                ]
+                "fields": ["name", "sourceStartUrl", "email", "website", "socialLinks"]
             },
             "display": {
                 "component": "table",
@@ -154,6 +158,10 @@
                     "name": {
                         "label": "Company Name",
                         "format": "text"
+                    },
+                    "sourceStartUrl": {
+                        "label": "Start URL",
+                        "format": "link"
                     },
                     "email": {
                         "label": "Email",
@@ -176,6 +184,7 @@
             "transformation": {
                 "fields": [
                     "name",
+                    "sourceStartUrl",
                     "profileUrl",
                     "website",
                     "email",
@@ -200,6 +209,10 @@
                     "name": {
                         "label": "Company Name",
                         "format": "text"
+                    },
+                    "sourceStartUrl": {
+                        "label": "Start URL",
+                        "format": "link"
                     },
                     "profileUrl": {
                         "label": "Profile URL",

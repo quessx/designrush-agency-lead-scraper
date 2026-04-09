@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "meta": {
         "templateId": "ts-crawlee-puppeteer-chrome",
-		"generatedBy": "gpt-5.2"
+        "generatedBy": "gpt-5-codex"
     },
     "input": "./input_schema.json",
     "output": "./output_schema.json",

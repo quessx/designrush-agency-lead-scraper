@@ -1,6 +1,7 @@
 import type { Page } from 'puppeteer';
-import type { AgencyLead, RequiredField, SocialLinks } from './types.js';
+
 import { DATA_PATTERNS, PROFILE_SELECTORS } from './selectors.js';
+import type { AgencyLead, RequiredField, SocialLinks } from './types.js';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -21,13 +22,12 @@ function getStringProp(obj: UnknownRecord, key: string): string | null {
 
 async function getJsonLdScriptContents(page: Page): Promise<string[]> {
     try {
-        const scripts = await page.$$eval('script[type="application/ld+json"]', (elements) =>
+        return await page.$$eval('script[type="application/ld+json"]', (elements) =>
             elements
                 .map((el) => el.textContent)
                 .filter((text): text is string => typeof text === 'string' && text.trim().length > 0)
                 .map((text) => text.trim()),
         );
-        return scripts;
     } catch {
         return [];
     }
@@ -90,9 +90,7 @@ export async function getTextContent(page: Page, selector: string): Promise<stri
     try {
         const element = await page.$(selector);
         if (!element) return null;
-
-        const text = await page.evaluate((el) => el.textContent?.trim() || null, element);
-        return text;
+        return await page.evaluate((el) => el.textContent?.trim() || null, element);
     } catch {
         return null;
     }
@@ -105,12 +103,10 @@ export async function getHref(page: Page, selector: string): Promise<string | nu
     try {
         const element = await page.$(selector);
         if (!element) return null;
-
-        const href = await page.evaluate((el) => {
+        return await page.evaluate((el) => {
             const link = el.closest('a') || (el.tagName === 'A' ? el : null);
             return (link as HTMLAnchorElement)?.href || null;
         }, element);
-        return href;
     } catch {
         return null;
     }
@@ -123,12 +119,10 @@ export async function getImgSrc(page: Page, selector: string): Promise<string | 
     try {
         const element = await page.$(selector);
         if (!element) return null;
-
-        const src = await page.evaluate((el) => {
+        return await page.evaluate((el) => {
             const img = el.tagName === 'IMG' ? el : el.querySelector('img');
             return (img as HTMLImageElement)?.src || null;
         }, element);
-        return src;
     } catch {
         return null;
     }
@@ -143,8 +137,8 @@ export async function getAllTextContents(page: Page, selector: string): Promise<
         if (!elements.length) return [];
 
         const texts = await Promise.all(
-            elements.map((element) =>
-                page.evaluate((el) => el.textContent?.trim() || '', element),
+            elements.map(
+                async (element): Promise<string> => page.evaluate((el) => el.textContent?.trim() || '', element),
             ),
         );
         return texts.filter((text: string) => text.length > 0);
@@ -154,9 +148,7 @@ export async function getAllTextContents(page: Page, selector: string): Promise<
 }
 
 function uniqueNonEmpty(items: string[]): string[] {
-    const normalized = items
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+    const normalized = items.map((s) => s.trim()).filter((s) => s.length > 0);
     return [...new Set(normalized)];
 }
 
@@ -174,9 +166,7 @@ export async function extractServices(page: Page): Promise<string[]> {
     for (const selector of selectors) {
         try {
             const items = await page.$$eval(selector, (elements) =>
-                elements
-                    .map((el) => (el as HTMLElement).textContent?.trim() || '')
-                    .filter((text) => text.length > 0),
+                elements.map((el) => (el as HTMLElement).textContent?.trim() || '').filter((text) => text.length > 0),
             );
             const unique = [...new Set(items)];
             if (unique.length > 0) return unique;
@@ -193,17 +183,12 @@ export async function extractServices(page: Page): Promise<string[]> {
  * Extract industries from the dedicated industries block on profile page.
  */
 export async function extractIndustries(page: Page): Promise<string[]> {
-    const selectors = [
-        '.profile-block.industries ul li',
-        '.profile-block.industries li',
-    ];
+    const selectors = ['.profile-block.industries ul li', '.profile-block.industries li'];
 
     for (const selector of selectors) {
         try {
             const items = await page.$$eval(selector, (elements) =>
-                elements
-                    .map((el) => (el as HTMLElement).textContent?.trim() || '')
-                    .filter((text) => text.length > 0),
+                elements.map((el) => (el as HTMLElement).textContent?.trim() || '').filter((text) => text.length > 0),
             );
             const unique = [...new Set(items)];
             if (unique.length > 0) return unique;
@@ -296,11 +281,14 @@ export async function extractWebsite(page: Page): Promise<string | null> {
             const links = await statsSection.$$('a[href^="http"]');
             for (const link of links) {
                 const href = await page.evaluate((el) => (el as HTMLAnchorElement).href, link);
-                if (href && !href.includes('designrush.com') &&
+                if (
+                    href &&
+                    !href.includes('designrush.com') &&
                     !href.includes('linkedin') &&
                     !href.includes('facebook') &&
                     !href.includes('twitter') &&
-                    !href.includes('instagram')) {
+                    !href.includes('instagram')
+                ) {
                     return href;
                 }
             }
@@ -381,7 +369,9 @@ export async function extractCompanyStats(page: Page): Promise<{
 
     try {
         // Get all text from stats-like containers
-        const statsContainers = await page.$$('[class*="stats"], [class*="Stats"], [class*="info"], [class*="Info"], [class*="detail"], [class*="Detail"]');
+        const statsContainers = await page.$$(
+            '[class*="stats"], [class*="Stats"], [class*="info"], [class*="Info"], [class*="detail"], [class*="Detail"]',
+        );
 
         for (const container of statsContainers) {
             const text = await page.evaluate((el) => el.textContent || '', container);
@@ -453,6 +443,8 @@ export function leadMeetsRequirements(lead: AgencyLead, requiredFields: Required
             case 'instagram':
                 if (!lead.socialLinks.instagram) return false;
                 break;
+            default:
+                return false;
         }
     }
 
@@ -489,14 +481,10 @@ export async function extractPortfolioCount(page: Page): Promise<number | null> 
  */
 export async function waitForPageLoad(page: Page, timeout = 10000): Promise<void> {
     try {
-        await page.waitForFunction(
-            () => document.readyState === 'complete',
-            { timeout },
-        );
+        await page.waitForFunction(() => document.readyState === 'complete', { timeout });
         // Additional wait for dynamic content
         await sleep(1000);
     } catch {
         // Continue even if timeout
     }
 }
-

@@ -6,7 +6,7 @@
         "startUrls": {
             "title": "Start URLs",
             "type": "array",
-            "description": "Category URL(s) to start scraping from. In MVP, use exactly one category URL (e.g., https://www.designrush.com/agency/web-development-companies)",
+            "description": "DesignRush category or profile URL(s) to start scraping from. Each output item will include the original start URL in sourceStartUrl.",
             "editor": "requestListSources",
             "prefill": [
                 {
@@ -47,22 +47,8 @@
             "editor": "select",
             "items": {
                 "type": "string",
-                "enum": [
-                    "email",
-                    "website",
-                    "linkedin",
-                    "facebook",
-                    "twitter",
-                    "instagram"
-                ],
-                "enumTitles": [
-                    "Email",
-                    "Website",
-                    "LinkedIn",
-                    "Facebook",
-                    "Twitter",
-                    "Instagram"
-                ]
+                "enum": ["email", "website", "linkedin", "facebook", "twitter", "instagram"],
+                "enumTitles": ["Email", "Website", "LinkedIn", "Facebook", "Twitter", "Instagram"]
             },
             "default": []
         },
